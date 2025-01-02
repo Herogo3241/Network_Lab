@@ -1,5 +1,5 @@
 #include "config.h"
-
+#include <string.h>
 
 
 int main(void){
@@ -24,12 +24,27 @@ int main(void){
 
 
     char buffer[1024];
-    bzero(buffer, 1024);
-    recv(client_socket, buffer, 4096, 0);
+    memset(buffer, '\0', sizeof(buffer));
+    recv(client_socket, buffer, sizeof(buffer) - 1, 0);
 
-    printf("[SERVER]: %s", buffer);
+    printf("[SERVER]: %s\n", buffer);
 
+ 
+    // bzero(buffer, 1024);
     
+    char* line = NULL;
+    size_t lineSize = 0;
+    printf("Enter the message...(Type exit to exit)");
+    while(1){
+        ssize_t readLineSize = getline(&line, &lineSize, stdin);
+        if (readLineSize > 0){
+            if (strcmp(line, "exit\n") == 0)
+                break;
+            else
+                send(client_socket, line, readLineSize, 0);
+        }
+    }
+
 
 
     return 0;

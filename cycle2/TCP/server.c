@@ -1,4 +1,5 @@
 #include "config.h"
+#include <string.h>
 
 int main(void){
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -31,9 +32,19 @@ int main(void){
         printf("Accepted Client\n");
 
 
-    char* message = "Hello";
-    send(client_socket, message, sizeof(message), 0);
+    char message[1024];
+    memset(message, 0, 1024);
+    strcpy(message, "CONNECTED");
+    send(client_socket, message, strlen(message), 0);
+
+    while(1){
+        bzero(message, 1024);
+        recv(client_socket, message, 1024, 0);
+        printf("%s\n", message);
+    }    
+
 
     close(server_socket);
+    return 0;
 
 }
