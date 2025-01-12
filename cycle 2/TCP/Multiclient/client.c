@@ -3,13 +3,13 @@
 
 void *serverComm(void *sock_id)
 {
-    int client_socket = *(int *)sock_id;
+    int client_socket = *((int *) sock_id);
     while (1)
     {
         char data[1024];
         bzero(data, 1024);
         int data_size = recv(client_socket, data, 1024, 0);
-        data[data_size] = '\0';
+        //data[data_size] = '\0';
         printf("%s", data);
     }
 }
@@ -35,29 +35,25 @@ int main(void)
         printf("Connection Established\n");
 
     pthread_t thread;
-    char name[10];
+    char* name = NULL;
+    size_t name_size = 0;
     printf("Enter username: ");
-    if (fgets(name, sizeof(name), stdin) != NULL)
-    {
-        size_t len = strlen(name);
-        if (len > 0 && name[len - 1] == '\n')
-        {
-            name[len - 1] = '\0'; // Remove trailing newline
-        }
-        printf("Hello, %s!\n", name);
-    }
-    else
-    {
-        printf("Error reading input.\n");
-        return 1;
-    }
-
-    pthread_create(&thread, NULL, serverComm, (void *)client_socket);
+    ssize_t name_count = getline(&name, &name_size, stdin);
+    name[name_size] = '\0';
+    printf("Hello %s, Welcome to the Chat!", name);
+    
+    pthread_create(&thread, NULL, serverComm, &client_socket);
+    char* buffer = NULL;
+    size_t len = 0;
+ 
+    char message[1024];
     while (1)
     {
-        char *buffer = NULL;
-        size_t len = 0;
-        ssize_t message_size = getline(&buffer, &len, stdin);
+       
+         ssize_t message_size = getline(&buffer, &len, stdin);
+         buffer[len-1] = 0;
+         printf("You: %s", buffer);
+         sprintf(message, "[%s]: %s", name, buffer);
 
         if (message_size > 0)
         {
@@ -68,13 +64,11 @@ int main(void)
             }
             else
             {
-                char message[1024];
-                memset(message, 0, sizeof(message)); // Clear the message buffer
-                snprintf(message, 1024, "[%s]: %s", name, buffer);
+               // memset(message, 0, sizeof(message)); // Clear the message buffer
                 send(client_socket, message, strlen(message), 0);
             }
         }
-        free(buffer); // Free buffer after use
+   //     free(buffer); // Free buffer after use
     }
 
     return 0;
